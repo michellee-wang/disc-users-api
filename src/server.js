@@ -12,7 +12,19 @@ app.use(express.json());
 app.get("/users", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM users");
-    res.json(result.rows);
+    
+    const users = result.rows.map(user => ({
+      id: user.id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+      bio: user.bio,
+      major: user.major,
+      graduationYear: user.graduation_year,
+      topArtists: user.top_artists
+    }));
+    
+    res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Failed to retrieve users" });

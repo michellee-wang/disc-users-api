@@ -21,7 +21,8 @@ app.get("/users", async (req, res) => {
       bio: user.bio,
       major: user.major,
       graduationYear: user.graduation_year,
-      topArtists: user.top_artists
+      topArtists: user.top_artists,
+      profilePicture: user.profile_picture
     }));
     
     res.json(users);

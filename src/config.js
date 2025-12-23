@@ -1,4 +1,5 @@
 const { Pool } = require("pg");
+const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
 if (!process.env.DATABASE_URL) {
@@ -15,4 +16,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-module.exports = pool;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+module.exports = { pool, supabase };

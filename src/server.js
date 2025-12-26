@@ -167,7 +167,7 @@ app.post("/spotify/callback", async (req, res) => {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'http://127.0.0.1:5173/signup'
+        redirect_uri: 'https://disc-app-five.vercel.app/signup'
       })
     });
 

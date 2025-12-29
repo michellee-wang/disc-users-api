@@ -180,6 +180,24 @@ app.post("/spotify/callback", async (req, res) => {
       throw new Error(tokenData.error_description || 'Failed to get access token');
     }
     
+    // Get user profile (includes profile picture)
+    const profileResponse = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
+
+    const profileData = await profileResponse.json();
+    
+    if (profileData.error) {
+      throw new Error(profileData.error.message || 'Failed to get user profile');
+    }
+    
+    // Get profile picture (use the first/largest image)
+    const profilePicture = profileData.images && profileData.images.length > 0 
+      ? profileData.images[0].url 
+      : null;
+    
     // Get top 3 artists
     const artistsResponse = await fetch('https://api.spotify.com/v1/me/top/artists?limit=3&time_range=medium_term', {
       headers: {
@@ -195,7 +213,7 @@ app.post("/spotify/callback", async (req, res) => {
     
     const topArtists = artistsData.items.map(artist => artist.name);
 
-    res.json({ topArtists });
+    res.json({ topArtists, profilePicture });
   } catch (error) {
     console.error('Spotify callback error:', error);
     res.status(500).json({ error: error.message });

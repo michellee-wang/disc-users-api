@@ -13,6 +13,12 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// Ensure all responses are JSON
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
 // POST /auth/signup
 app.post("/auth/signup", async (req, res) => {
   const { 
@@ -26,6 +32,15 @@ app.post("/auth/signup", async (req, res) => {
     topArtists, 
     profilePicture 
   } = req.body;
+  
+  // Validate required fields
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+  
+  if (!firstName || !lastName) {
+    return res.status(400).json({ error: "First name and last name are required" });
+  }
   
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -43,27 +58,34 @@ app.post("/auth/signup", async (req, res) => {
           first_name: firstName, 
           last_name: lastName, 
           email: email,
-          bio: bio,
-          major: major,
-          graduation_year: graduationYear,
-          top_artists: topArtists,
-          profile_picture: profilePicture
+          bio: bio || null,
+          major: major || null,
+          graduation_year: graduationYear || null,
+          top_artists: topArtists || null,
+          profile_picture: profilePicture || null
         }]);
       
       if (insertError) {
         console.error("Error inserting into public users:", insertError.message);
+        return res.status(500).json({ error: "Failed to create user profile" });
       }
     }
 
     res.status(201).json({ message: "User created successfully", user: data.user });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Signup error:", error);
+    res.status(400).json({ error: error.message || "Signup failed" });
   }
 });
 
 // POST /auth/login - login as an existing user
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+  
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -74,7 +96,8 @@ app.post("/auth/login", async (req, res) => {
 
     res.json({ message: "Login successful", session: data.session });
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    console.error("Login error:", error);
+    res.status(401).json({ error: error.message || "Login failed" });
   }
 });
 
@@ -220,6 +243,18 @@ app.post("/spotify/callback", async (req, res) => {
   }
 });
 
+// 404 handler - must be after all routes
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Global error handler - must be last
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(err.status || 500).json({ 
+    error: err.message || "Internal server error" 
+  });
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

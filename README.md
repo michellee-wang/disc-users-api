@@ -1,6 +1,7 @@
 # disc users api
 
 backend api for the disc project - a music-based social networking platform for college students.
+
 frontend: https://github.com/michellee-wang/muse
 
 ## endpoints
